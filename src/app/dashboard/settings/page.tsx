@@ -52,9 +52,11 @@ const getErrorMessage = (error: unknown): string => {
 const CurrencySelector = ({
   value,
   onChange,
+  pendingValue,
 }: {
   value: AppSettings['currency'];
   onChange: (value: AppSettings['currency']) => void;
+  pendingValue?: AppSettings['currency'];
 }) => {
   const options = [
     { value: 'USD', symbol: getCurrencySymbol('USD') },
@@ -65,22 +67,32 @@ const CurrencySelector = ({
 
   return (
     <div className="grid grid-cols-2 gap-2 p-2 bg-muted rounded-lg">
-      {options.map((option) => (
-        <Button
-          key={option.value}
-          variant="ghost"
-          onClick={() => onChange(option.value)}
-          className={cn(
-            'h-auto flex-col p-3',
-            value === option.value
-              ? 'bg-primary/10 text-primary border border-primary'
-              : 'bg-background',
-          )}
-        >
-          <span className="text-2xl font-bold">{option.symbol}</span>
-          <span className="text-xs">{option.value}</span>
-        </Button>
-      ))}
+      {options.map((option) => {
+        const isSelected = value === option.value;
+        const isPending = pendingValue === option.value;
+        const isFading = pendingValue && isSelected; // Current value fades if there is a pending change
+
+        return (
+          <Button
+            key={option.value}
+            variant="ghost"
+            onClick={() => onChange(option.value)}
+            className={cn(
+              'h-auto flex-col p-3 transition-all duration-300 relative overflow-visible', // Added relative and overflow-visible
+              isSelected && !pendingValue && 'bg-primary/10 text-primary border border-primary', // Normal active state
+              isPending && 'bg-primary text-primary-foreground scale-105 shadow-xl ring-2 ring-primary ring-offset-2 z-10', // Stronger active state with ring and lift
+              isFading && 'bg-primary/5 text-primary/50 opacity-40 scale-95 blur-[0.5px]', // Fading out more noticeably
+              !isSelected && !isPending && 'bg-background hover:bg-accent' // Default inactive
+            )}
+          >
+            <span className="text-2xl font-bold">{option.symbol}</span>
+            <span className="text-xs">{option.value}</span>
+            {isPending && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white border-2 border-primary animate-pulse shadow-sm z-20" />
+            )}
+          </Button>
+        );
+      })}
     </div>
   );
 };
@@ -118,37 +130,30 @@ const Settings = () => {
       return;
 
     setIsConverting(true);
-    toast.loading('Converting currencies... This may take a moment.');
+    // Removed toast.loading to reduce notifications
 
     try {
-      // Convert transactions
-      const { data: transactions, error: tError } = await supabase
-        .from('transactions')
-        .select('id, amount')
-        .eq('user_id', user.id);
-      if (tError) throw tError;
+      // 1. Calculate conversion rate
+      const rate = convertAmount(1, conversionDialog.from!, conversionDialog.to!);
 
-      const transactionUpdates = transactions.map((transaction) => {
-        const convertedAmount = convertAmount(
-          transaction.amount,
-          conversionDialog.from!,
-          conversionDialog.to!,
-        );
-        return supabase
-          .from('transactions')
-          .update({ amount: convertedAmount })
-          .eq('id', transaction.id);
+      // 2. Call RPC to update all transactions and settings in one go
+      const { error: rpcError } = await supabase.rpc('convert_currency', {
+        p_user_id: user.id,
+        p_rate: rate,
+        p_new_currency: conversionDialog.to
       });
 
-      // Convert budgets
+      if (rpcError) throw rpcError;
+
+      // 3. Convert budgets (Single row update, so fine to do here)
       const { data: budgetData, error: bError } = await supabase
         .from('budgets')
         .select('budgets')
         .eq('user_id', user.id)
-        .single();
-      if (bError && bError.code !== 'PGRST116') throw bError; // Ignore if no row found
+        .maybeSingle();
 
-      let budgetUpdates: any = null;
+      if (bError && bError.code !== 'PGRST116') throw bError;
+
       if (budgetData?.budgets) {
         const convertedBudgets: { [key: string]: number } = {};
         for (const categoryId in budgetData.budgets) {
@@ -159,30 +164,18 @@ const Settings = () => {
             conversionDialog.to!,
           );
         }
-        budgetUpdates = supabase
+        const { error: budgetUpdateError } = await supabase
           .from('budgets')
           .update({ budgets: convertedBudgets })
           .eq('user_id', user.id);
+
+        if (budgetUpdateError) throw budgetUpdateError;
       }
 
-      // Update the currency setting itself
-      const settingsUpdate = supabase
-        .from('settings')
-        .update({ currency: conversionDialog.to })
-        .eq('user_id', user.id);
-
-      const allPromises = [...transactionUpdates, settingsUpdate];
-      if (budgetUpdates) {
-        allPromises.push(budgetUpdates);
-      }
-
-      const results = await Promise.all(allPromises);
-      results.forEach((res) => {
-        if (res.error) throw res.error;
-      });
-
-      toast.dismiss();
       toast.success(`Currency successfully changed to ${conversionDialog.to}`);
+
+      // Refresh local data
+      updateSettings({ currency: conversionDialog.to });
     } catch (error: unknown) {
       toast.dismiss();
       toast.error('Conversion failed', {
@@ -440,6 +433,7 @@ const Settings = () => {
                         <CurrencySelector
                           value={item.value as AppSettings['currency']}
                           onChange={item.onChange!}
+                          pendingValue={conversionDialog.open ? conversionDialog.to : undefined}
                         />
                       </div>
                     );
