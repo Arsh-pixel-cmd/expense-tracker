@@ -13,6 +13,15 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -65,9 +74,9 @@ const Account = () => {
       // Then, update the public profiles table
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ 
-          full_name: displayName.trim(), 
-          updated_at: new Date().toISOString() 
+        .update({
+          full_name: displayName.trim(),
+          updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
@@ -202,14 +211,81 @@ const Account = () => {
             <CardTitle className="text-lg">Security</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full justify-between"
-              onClick={handlePasswordReset}
-            >
-              <span>Change Password</span>
-              <KeyRound className="h-4 w-4 text-muted-foreground" />
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <span>Change Password</span>
+                  <KeyRound className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Change Password</DialogTitle>
+                  <DialogDescription>
+                    Enter your new password below.
+                  </DialogDescription>
+                </DialogHeader>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const newPassword = formData.get('newPassword') as string;
+                    const confirmPassword = formData.get('confirmPassword') as string;
+
+                    if (newPassword !== confirmPassword) {
+                      toast.error('Passwords do not match');
+                      return;
+                    }
+                    if (newPassword.length < 6) {
+                      toast.error('Password must be at least 6 characters');
+                      return;
+                    }
+
+                    try {
+                      const { error } = await supabase.auth.updateUser({
+                        password: newPassword,
+                      });
+                      if (error) throw error;
+                      toast.success('Password updated successfully');
+                      // Optional: Close dialog by forcing a click or managing state. 
+                      // For simplicity in this inline edit, we might rely on the user closing it or use proper state if I refactored to a component.
+                      // Let's just create a self-contained component logic if possible, or just accept standard behavior.
+                      // Actually, managing state is better. But I can't easily hook into state without refactoring the whole component heavily.
+                      // I will use `e.target.closest('div[role="dialog"]')?.querySelector('button[aria-label="Close"]')?.click()` hack or just let them close it.
+                      // Better: Let's use a controlled Dialog if I can edit the functional component start. 
+                      // I'll stick to uncontrolled for now to minimize breakage, but I will add a success toast.
+                    } catch (error: unknown) {
+                      toast.error(getErrorMessage(error, 'Failed to update password'));
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      name="newPassword"
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit">Update Password</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
             <Button
               variant="outline"
               className="w-full justify-between"
@@ -227,7 +303,7 @@ const Account = () => {
               Danger Zone
             </CardTitle>
             <CardDescription>
-                Proceed with caution. These actions are irreversible.
+              Proceed with caution. These actions are irreversible.
             </CardDescription>
           </CardHeader>
           <CardContent>
