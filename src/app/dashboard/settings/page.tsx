@@ -261,13 +261,13 @@ const Settings = () => {
   const handleThemeChange = (isDark: boolean) => {
     const newTheme = isDark ? 'dark' : 'light';
     setTheme(newTheme);
-    updateSettings({ darkMode: isDark });
+    updateSettings({ dark_mode: isDark });
   };
 
   const currentSettings: AppSettings = settings || {
     user_id: user?.id || '',
     notifications: true,
-    darkMode: false,
+    dark_mode: false,
     auto_categ: true,
     language: 'English',
     currency: 'USD',
@@ -329,7 +329,7 @@ const Settings = () => {
           icon: Moon,
           label: 'Dark Mode',
           toggle: true,
-          value: currentSettings.darkMode,
+          value: currentSettings.dark_mode,
           onChange: handleThemeChange,
         },
         {
