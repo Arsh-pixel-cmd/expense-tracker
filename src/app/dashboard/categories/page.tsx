@@ -89,7 +89,14 @@ const Categories = () => {
               onClick={async () => {
                 const { error } = await supabase.rpc('cleanup_duplicate_categories');
                 if (error) {
-                  toast.error("Failed to cleanup duplicates", { description: error.message });
+                  if (error.code === 'PGRST202') {
+                    toast.error("Database Update Required", {
+                      description: "Please run the 'fix_categories.sql' script in Supabase SQL Editor.",
+                      duration: 10000
+                    });
+                  } else {
+                    toast.error("Failed to cleanup duplicates", { description: error.message });
+                  }
                 } else {
                   toast.success("Duplicates merged successfully!");
                   window.location.reload();

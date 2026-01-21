@@ -108,12 +108,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) {
       console.error('Failed to delete category:', error);
-      toast.error('Failed to delete category.', { description: error.message });
-    } else {
-      toast.success('Category deleted and transactions reassigned.');
-      mutate(`transactions?user_id=eq.${user.id}`);
-      mutate(`categories?user_id=eq.${user.id}`);
+      if (error.code === 'PGRST202') {
+        toast.error("Database Update Required", {
+          description: "Please run the 'fix_categories.sql' script in Supabase SQL Editor to enable deletion.",
+          duration: 10000
+        });
+      } else {
+        toast.error(`Failed to delete category: ${error.message}`);
+      }
+      return;
     }
+    toast.success('Category deleted and transactions reassigned.');
+    mutate(`transactions?user_id=eq.${user.id}`);
+    mutate(`categories?user_id=eq.${user.id}`);
   };
 
   const updateSettings = async (settings: Partial<Settings>) => {
