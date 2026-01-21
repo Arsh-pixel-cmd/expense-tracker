@@ -91,43 +91,61 @@ const Payments = () => {
         }
       />
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Quick Payments</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Quick Payments</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {upiOptions.map((opt) => {
             const Icon = opt.icon;
+            // Define gradients for each option
+            const gradientClass =
+              opt.name === 'Google Pay' ? 'bg-gradient-to-br from-blue-500 to-green-500' :
+                opt.name === 'PhonePe' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' :
+                  'bg-gradient-to-br from-cyan-400 to-blue-600';
+
             return (
               <AlertDialog key={opt.name}>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-3 py-5"
-                  >
-                    <Icon className="h-6 w-6" />
-                    <span className="font-semibold">{opt.name}</span>
-                  </Button>
+                  <button className={`
+                    group relative overflow-hidden rounded-2xl p-6 h-32
+                    ${gradientClass}
+                    text-white shadow-lg transition-all duration-300
+                    hover:scale-105 hover:shadow-2xl hover:-translate-y-1
+                  `}>
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                    <div className="absolute -right-4 -bottom-4 opacity-20 group-hover:scale-150 group-hover:rotate-12 transition-transform duration-500">
+                      <Icon className="w-24 h-24" />
+                    </div>
+
+                    <div className="relative z-10 flex flex-col h-full justify-between items-start">
+                      <div className="p-2 bg-white/20 backdrop-blur-md rounded-xl">
+                        <Icon className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-lg">{opt.name}</p>
+                        <p className="text-xs text-white/80">Tap to pay</p>
+                      </div>
+                    </div>
+                  </button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Open {opt.name}?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will attempt to open the app.
+                      This will open the {opt.name} app on your device.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={() => handleOpenUPI(opt.scheme)}>
-                      Proceed
+                      Open App
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             );
           })}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
@@ -168,8 +186,8 @@ const Payments = () => {
                     <div className="flex items-center gap-2">
                       <p
                         className={`font-bold ${tx.type === 'credit'
-                            ? 'text-success'
-                            : 'text-destructive'
+                          ? 'text-success'
+                          : 'text-destructive'
                           }`}
                       >
                         {tx.type === 'credit' ? '+' : '-'}

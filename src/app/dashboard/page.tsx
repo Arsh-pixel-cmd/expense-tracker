@@ -1,9 +1,16 @@
-
 'use client';
 
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingDown, TrendingUp, RotateCcw } from "lucide-react";
+import {
+  TrendingDown, Search,
+  SlidersHorizontal,
+  Banknote,
+  CreditCard,
+  Smartphone,
+  Wallet,
+  MoreHorizontal, TrendingUp, RotateCcw
+} from 'lucide-react';
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useMemo } from "react";
@@ -37,7 +44,19 @@ import { useCollection, useDoc } from "@/hooks/use-supabase";
 import type { Transaction, Settings, Category, BudgetSettings } from "@/lib/types";
 
 
-export default function Dashboard() {
+const getPaymentIcon = (method?: string) => {
+  switch (method) {
+    case 'card': return <CreditCard className="h-3 w-3" />;
+    case 'gpay':
+    case 'phonepe':
+    case 'paytm':
+      return <Smartphone className="h-3 w-3" />;
+    case 'cash': return <Banknote className="h-3 w-3" />;
+    default: return <MoreHorizontal className="h-3 w-3" />;
+  }
+};
+
+const Dashboard = () => {
   const { addTransaction, deleteTransaction } = useApp();
   const { session } = useSupabase();
   const user = session?.user;
@@ -364,3 +383,5 @@ export default function Dashboard() {
     </>
   );
 };
+
+export default Dashboard;

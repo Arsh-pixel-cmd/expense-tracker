@@ -12,6 +12,7 @@ import { Plus, Sparkles } from "lucide-react";
 import { Category, Transaction } from "@/lib/types";
 import type { Settings } from "@/lib/types";
 import { Switch } from "./ui/switch";
+import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { AddCategoryDialog } from "./AddCategoryDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useSupabase } from "@/lib/supabase/provider";
@@ -39,6 +40,7 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
     type: "debit" as "debit" | "credit",
     status: "completed" as "completed" | "pending",
     note: "",
+    payment_method: "cash",
   });
 
   const { data: settings } = useDoc<Settings>(
@@ -80,6 +82,7 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
         type: formData.type,
         status: formData.status,
         note: formData.note,
+        payment_method: formData.payment_method,
       }, useAutoCategory);
 
       toast.success(`Transaction ${useAutoCategory ? 'auto-categorized and' : ''} added successfully!`);
@@ -91,7 +94,9 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
         category: "",
         type: "debit",
         status: "completed",
+
         note: "",
+        payment_method: "cash",
       });
 
     } catch (error: unknown) {
@@ -162,6 +167,14 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Payment Method</Label>
+            <PaymentMethodSelector
+              value={formData.payment_method}
+              onChange={(method) => setFormData({ ...formData, payment_method: method })}
+            />
           </div>
 
           <div className="space-y-2">

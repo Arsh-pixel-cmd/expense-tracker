@@ -12,6 +12,7 @@ export interface Transaction {
   note?: string;
   groupId?: string;
   groupExpenseId?: string;
+  payment_method?: string;
 }
 
 export interface Category {
