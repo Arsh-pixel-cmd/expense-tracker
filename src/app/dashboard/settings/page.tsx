@@ -268,7 +268,7 @@ const Settings = () => {
     user_id: user?.id || '',
     notifications: true,
     darkMode: false,
-    autoCateg: true,
+    auto_categ: true,
     language: 'English',
     currency: 'USD',
   };
@@ -336,8 +336,8 @@ const Settings = () => {
           icon: Sparkles,
           label: 'Auto Categorization',
           toggle: true,
-          value: currentSettings.autoCateg,
-          onChange: (v: boolean) => updateSettings({ autoCateg: v }),
+          value: currentSettings.auto_categ,
+          onChange: (v: boolean) => updateSettings({ auto_categ: v }),
         },
         {
           icon: DollarSign,

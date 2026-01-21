@@ -60,25 +60,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         categories || []
       );
 
-      finalCategoryName = predicted || "General";
+      finalCategoryName = predicted || "Others";
 
-      const { data: existingCat, error: existError } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('name', finalCategoryName)
-        .maybeSingle();
-
-      if (existError) { console.error(existError); }
+      // Check if category exists (case-insensitive)
+      const existingCat = (categories || []).find(
+        (c) => c.name.toLowerCase() === finalCategoryName.toLowerCase()
+      );
 
       if (!existingCat) {
         await addDocument("categories", {
-          name: finalCategoryName,
+          name: finalCategoryName.charAt(0).toUpperCase() + finalCategoryName.slice(1), // Title Case
           icon: "FolderTree",
           color: "text-primary",
           bg_color: "bg-primary/10",
           groups: [],
         });
+        mutate(`categories?user_id=eq.${user.id}`); // Force refresh immediately
+      } else {
+        finalCategoryName = existingCat.name; // Use existing casing
       }
     }
 
@@ -105,7 +104,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteCategory = async (id: number) => {
     if (!user) return;
-    const { error } = await supabase.rpc('delete_category_and_reassign_transactions', { category_id_to_delete: id });
+    const { error } = await supabase.rpc('delete_category_by_id', { category_id_to_delete: id });
 
     if (error) {
       console.error('Failed to delete category:', error);

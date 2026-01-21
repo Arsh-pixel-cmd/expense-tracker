@@ -40,7 +40,7 @@ export interface Settings {
   user_id: string;
   notifications: boolean;
   darkMode: boolean;
-  autoCateg: boolean;
+  auto_categ: boolean;
   language: string;
   currency: "USD" | "EUR" | "GBP" | "INR";
 }

@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +47,7 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
 
   useEffect(() => {
     if (settings) {
-      setUseAutoCategory(settings.autoCateg);
+      setUseAutoCategory(settings.auto_categ);
     }
   }, [settings]);
 
@@ -116,10 +116,11 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add Transaction</DialogTitle>
+          <DialogDescription>Add a new income or expense transaction.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {settings?.autoCateg && (
+          {settings?.auto_categ && (
             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-primary/5">
               <div className="flex items-center gap-3">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -196,7 +197,7 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
                 </SelectTrigger>
 
                 <SelectContent>
-                  {(categories || []).map((cat) => (
+                  {Array.from(new Map((categories || []).map(c => [c.name, c])).values()).map((cat) => (
                     <SelectItem key={cat.id} value={cat.name}>
                       {cat.name}
                     </SelectItem>

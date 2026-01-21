@@ -32,17 +32,18 @@ import {
   Trash2,
   TrendingDown,
   TrendingUp,
+  Sparkles,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '@/contexts/AppContext';
-
-
+import { createClient } from '@/lib/supabase/client';
 
 const Categories = () => {
   const { addCategory, deleteCategory } = useApp();
   const { session } = useSupabase();
   const user = session?.user;
+  const supabase = createClient();
 
   const { data: categories } = useCollection<Category>(
     user ? `categories?user_id=eq.${user.id}` : null
@@ -80,7 +81,27 @@ const Categories = () => {
       <PageHeader
         title="Categories & Groups"
         subtitle="Organize your expenses"
-        action={<AddCategoryDialog onAddCategory={handleAddCategory} />}
+        action={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const { error } = await supabase.rpc('cleanup_duplicate_categories');
+                if (error) {
+                  toast.error("Failed to cleanup duplicates", { description: error.message });
+                } else {
+                  toast.success("Duplicates merged successfully!");
+                  window.location.reload();
+                }
+              }}
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Fix Duplicates
+            </Button>
+            <AddCategoryDialog onAddCategory={handleAddCategory} />
+          </div>
+        }
       />
 
       <div className="space-y-4 mb-8">
