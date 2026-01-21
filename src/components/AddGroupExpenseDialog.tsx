@@ -45,55 +45,32 @@ export const AddGroupExpenseDialog = ({
     setIsSubmitting(true);
 
     try {
-      const groupExpenseData = {
-        title: title.trim(),
-        amount: numericAmount,
-        paid_by: user.id,
-        split_between: group.member_ids,
-        group_id: group.id,
-      };
-
-      const { data: insertedExpense, error: expenseError } = await supabase
-        .from('group_expenses')
-        .insert(groupExpenseData)
-        .select()
-        .single();
-
-      if (expenseError) throw expenseError;
-
+      // Prepare splits for RPC
       const shareAmount = numericAmount / group.member_ids.length;
-      const userExpenses = group.member_ids.map(memberId => ({
+      const splits = group.member_ids.map(memberId => ({
         user_id: memberId,
         amount: shareAmount,
         category: "Group Expense",
         date: formatDate(new Date()),
-        merchant: `${title} (${group.name})`,
-        status: "completed",
+        merchant: `${title.trim()} (${group.name})`,
         type: memberId === user.id ? "credit" : "debit",
         note: memberId === user.id
           ? "You paid a group expense"
-          : `Your share paid by ${user.user_metadata.full_name || "member"}`,
-        group_id: group.id,
-        group_expense_id: insertedExpense.id,
+          : `Your share paid by ${user.user_metadata.full_name || "member"}`
       }));
 
-      const { error: userExpensesError } = await supabase
-        .from('transactions')
-        .insert(userExpenses);
+      const { data, error } = await supabase.rpc('add_group_expense', {
+        p_title: title.trim(),
+        p_amount: numericAmount,
+        p_paid_by: user.id,
+        p_group_id: group.id,
+        p_splits: splits
+      });
 
-      if (userExpensesError) {
-        // If it's a type mismatch (e.g., trying to put UUID in bigint column), 
-        // retry without the group_expense_id to at least save the transactions
-        if (userExpensesError.code === '22P02') {
-          console.warn('Type mismatch for group_expense_id, retrying without it');
-          const fallbackExpenses = userExpenses.map(({ group_expense_id, ...rest }) => rest);
-          const { error: fallbackError } = await supabase
-            .from('transactions')
-            .insert(fallbackExpenses);
-          if (fallbackError) throw fallbackError;
-        } else {
-          throw userExpensesError;
-        }
+      if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to add expense");
       }
 
       toast.success("Group expense added");

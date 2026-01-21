@@ -1,10 +1,14 @@
--- RPC to add group expense transactions (Bypasses RLS to insert for other members)
+-- Drop previous versions to fix "Ambigious Function" (PGRST203) error
+DROP FUNCTION IF EXISTS add_group_expense(TEXT, NUMERIC, UUID, UUID, JSONB[]);
+DROP FUNCTION IF EXISTS add_group_expense(TEXT, NUMERIC, TEXT, TEXT, JSONB[]);
+
+-- Re-create the function cleanly
 CREATE OR REPLACE FUNCTION add_group_expense(
   p_title TEXT,
   p_amount NUMERIC,
-  p_paid_by TEXT, -- Changed to TEXT
-  p_group_id TEXT, -- Changed to TEXT
-  p_splits JSONB[]
+  p_paid_by TEXT, -- Uses TEXT to accept both UUID string and text input
+  p_group_id TEXT, -- Uses TEXT to accept both UUID string and text input
+  p_splits JSONB[] 
 )
 RETURNS JSONB
 LANGUAGE plpgsql
