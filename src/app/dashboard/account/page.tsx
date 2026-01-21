@@ -254,8 +254,21 @@ const Account = () => {
                       // I will use `e.target.closest('div[role="dialog"]')?.querySelector('button[aria-label="Close"]')?.click()` hack or just let them close it.
                       // Better: Let's use a controlled Dialog if I can edit the functional component start. 
                       // I'll stick to uncontrolled for now to minimize breakage, but I will add a success toast.
-                    } catch (error: unknown) {
-                      toast.error(getErrorMessage(error, 'Failed to update password'));
+                    } catch (error: any) {
+                      if (error.message?.includes('requires re-authentication') || error.message?.includes('reauthenticate')) {
+                        toast.error(
+                          'Security Check: You need to log in again to verify your identity before changing your password.',
+                          {
+                            duration: 8000,
+                            action: {
+                              label: 'Logout Now',
+                              onClick: () => handleLogout(),
+                            },
+                          }
+                        );
+                      } else {
+                        toast.error(getErrorMessage(error, 'Failed to update password'));
+                      }
                     }
                   }}
                   className="space-y-4"
