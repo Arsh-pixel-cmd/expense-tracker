@@ -117,45 +117,28 @@ const Groups = () => {
     setIsJoining(true);
 
     try {
-      const { data: groupData, error } = await supabase
-        .from('groups')
-        .select('*')
-        .eq('invite_code', inviteCode.trim().toUpperCase())
-        .single();
+      const { data, error } = await supabase.rpc('join_group_by_code', {
+        p_invite_code: inviteCode.trim().toUpperCase(),
+        p_user_id: user.id,
+        p_user_name: user.user_metadata.full_name || 'Anonymous',
+        p_user_avatar: user.user_metadata.avatar_url || ''
+      });
 
-      if (error || !groupData) {
-        toast.error('Invalid invite code');
-        setIsJoining(false);
-        return;
+      if (error) {
+        throw error;
       }
 
-      if (groupData.member_ids.includes(user.id)) {
-        toast.info('Already a member');
-        setIsJoining(false);
+      if (!data.success) {
+        if (data.message === 'Already a member') {
+          toast.info('You are already a member of this group');
+        } else {
+          toast.error(data.message || 'Failed to join group');
+        }
         return;
       }
-
-      const updatedMembers = [
-        ...(groupData.members || []),
-        {
-          uid: user.id,
-          displayName: user.user_metadata.full_name ?? 'Anonymous',
-          photoURL: user.user_metadata.avatar_url ?? '',
-        },
-      ];
-
-      const { error: updateError } = await supabase
-        .from('groups')
-        .update({
-          member_ids: [...groupData.member_ids, user.id],
-          members: updatedMembers
-        })
-        .eq('id', groupData.id);
-
-      if (updateError) throw updateError;
 
       mutateGroups();
-      toast.success(`Joined ${groupData.name}`);
+      toast.success(`Joined ${data.group_name}!`);
       setJoinDialogOpen(false);
       setInviteCode('');
     } catch (err) {
