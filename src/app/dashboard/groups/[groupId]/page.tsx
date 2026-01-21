@@ -170,7 +170,7 @@ const GroupDetail = () => {
               <CardDescription>Who owes and who gets money</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {group.members && group.members.map((member: any) => {
+              {group.members && group.members.length > 0 && group.members.map((member: any) => {
                 const balance = balances[member.uid] || 0;
                 const settled = Math.abs(balance) < 1;
 
@@ -234,7 +234,7 @@ const GroupDetail = () => {
             <CardContent className="space-y-3">
               {expenses?.length ? (
                 expenses.map((exp) => {
-                  const payer = group.members.find(
+                  const payer = group.members?.find(
                     (m: any) => m.uid === exp.paid_by
                   );
                   const date = formatDistanceToNow(

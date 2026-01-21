@@ -79,11 +79,16 @@ const Groups = () => {
     const invite = generateInviteCode();
 
     try {
-      const newGroup: Omit<Group, 'id' | 'created_at' | 'members'> = {
+      const newGroup: Omit<Group, 'id' | 'created_at'> = {
         name: newGroupName.trim(),
         owner_id: user.id,
         member_ids: [user.id],
         invite_code: invite,
+        members: [{
+          uid: user.id,
+          displayName: user.user_metadata.full_name || 'User',
+          photoURL: user.user_metadata.avatar_url || ''
+        }]
       };
 
       await addDocument('groups', newGroup);
@@ -131,7 +136,7 @@ const Groups = () => {
       }
 
       const updatedMembers = [
-        ...groupData.members,
+        ...(groupData.members || []),
         {
           uid: user.id,
           displayName: user.user_metadata.full_name ?? 'Anonymous',
@@ -143,6 +148,7 @@ const Groups = () => {
         .from('groups')
         .update({
           member_ids: [...groupData.member_ids, user.id],
+          members: updatedMembers
         })
         .eq('id', groupData.id);
 
