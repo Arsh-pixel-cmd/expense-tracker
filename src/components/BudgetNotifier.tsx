@@ -86,6 +86,11 @@ export const BudgetNotifier = () => {
   }, [budgetSettings, categories, expenses]);
 
   useEffect(() => {
+    // Check standard notification permissions
+    if (settings?.notifications && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
     const next = activeBudgets.find((b) => {
       const spent = b.spent ?? 0;
       return (
@@ -95,8 +100,21 @@ export const BudgetNotifier = () => {
       );
     });
 
-    setTriggeredBudget(next ?? null);
-  }, [activeBudgets, dismissedCategories]);
+    if (next) {
+      setTriggeredBudget(next);
+
+      // Send system notification if enabled
+      if (settings?.notifications && 'Notification' in window && Notification.permission === 'granted') {
+        const spentAmount = next.spent || 0;
+        new Notification('Budget Alert 🚨', {
+          body: `You've used ${(spentAmount / (next.amount || 1) * 100).toFixed(0)}% of your ${next.categoryName} budget.`,
+          icon: '/icon-192x192.png'
+        });
+      }
+    } else {
+      setTriggeredBudget(null);
+    }
+  }, [activeBudgets, dismissedCategories, settings]);
 
   const handleDismiss = () => {
     if (!triggeredBudget) return;
