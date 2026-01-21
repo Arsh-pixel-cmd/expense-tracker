@@ -197,11 +197,13 @@ export const AddTransactionDialog = ({ addTransaction, categories }: AddTransact
                 </SelectTrigger>
 
                 <SelectContent>
-                  {Array.from(new Map((categories || []).map(c => [c.name, c])).values()).map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
+                  {Array.from(new Map((categories || []).map(c => [c.name, c])).values())
+                    .filter(c => c.name !== 'Others') // Filter out "Others" to avoid duplicate key
+                    .map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
                   <SelectItem value="Others">Others</SelectItem>
                 </SelectContent>
               </Select>
