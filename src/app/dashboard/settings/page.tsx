@@ -38,10 +38,31 @@ import {
   Target,
   User,
   DollarSign,
+  Euro,
+  PoundSterling,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+
+const RupeeIcon = ({ className, strokeWidth = 2.5 }: { className?: string; strokeWidth?: number }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M6 3h12" />
+    <path d="M6 8h12" />
+    <path d="m6 13 8.5 8" />
+    <path d="M6 13h3" />
+    <path d="M9 13c6.667 0 6.667-10 0-10" />
+  </svg>
+);
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -59,10 +80,10 @@ const CurrencySelector = ({
   pendingValue?: AppSettings['currency'];
 }) => {
   const options = [
-    { value: 'USD', symbol: '$' },
-    { value: 'EUR', symbol: '€' },
-    { value: 'GBP', symbol: '£' },
-    { value: 'INR', symbol: '₹' },
+    { value: 'USD', symbol: '$', icon: DollarSign },
+    { value: 'EUR', symbol: '€', icon: Euro },
+    { value: 'GBP', symbol: '£', icon: PoundSterling },
+    { value: 'INR', symbol: '₹', icon: RupeeIcon },
   ] as const;
 
   return (
@@ -71,6 +92,7 @@ const CurrencySelector = ({
         const isSelected = value === option.value;
         const isPending = pendingValue === option.value;
         const isFading = pendingValue && isSelected;
+        const Icon = option.icon;
 
         return (
           <Button
@@ -85,7 +107,7 @@ const CurrencySelector = ({
               !isSelected && !isPending && 'bg-background hover:bg-accent'
             )}
           >
-            <span className="text-2xl font-bold">{option.symbol}</span>
+            <Icon className="h-6 w-6 mb-1" strokeWidth={2.5} />
             <span className="text-xs">{option.value}</span>
             {isPending && (
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white border-2 border-primary animate-pulse shadow-sm z-20" />

@@ -20,11 +20,7 @@ export const MobileNav = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const pathname = usePathname();
 
-  // Hide on auth pages
-  // Only show on dashboard routes
-  if (!pathname.startsWith('/dashboard')) {
-    return null;
-  }
+
 
   const navItems = [
     { icon: Home, label: "Home", path: "/dashboard" },
@@ -58,6 +54,10 @@ export const MobileNav = () => {
     hidden: { y: "100%", opacity: 0.8 },
     visible: { y: "0%", opacity: 1 },
   };
+
+  if (!pathname.startsWith('/dashboard')) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

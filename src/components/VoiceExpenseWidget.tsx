@@ -32,10 +32,7 @@ export const VoiceExpenseWidget = () => {
     const { addTransaction } = useApp();
     const pathname = usePathname();
 
-    // Hide on auth pages
-    if (["/login", "/signup"].includes(pathname)) {
-        return null;
-    }
+
 
     const [isOpen, setIsOpen] = useState(false);
     const [parsedAmount, setParsedAmount] = useState<string>("");
@@ -116,6 +113,11 @@ export const VoiceExpenseWidget = () => {
         setParsedAmount("");
         setParsedNote("");
     };
+
+    // Hide on auth pages
+    if (["/login", "/signup"].includes(pathname)) {
+        return null;
+    }
 
     if (!isSupported) return null;
 
