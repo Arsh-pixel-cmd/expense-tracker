@@ -59,10 +59,10 @@ const CurrencySelector = ({
   pendingValue?: AppSettings['currency'];
 }) => {
   const options = [
-    { value: 'USD', symbol: getCurrencySymbol('USD') },
-    { value: 'EUR', symbol: getCurrencySymbol('EUR') },
-    { value: 'GBP', symbol: getCurrencySymbol('GBP') },
-    { value: 'INR', symbol: getCurrencySymbol('INR') },
+    { value: 'USD', symbol: '$' },
+    { value: 'EUR', symbol: '€' },
+    { value: 'GBP', symbol: '£' },
+    { value: 'INR', symbol: '₹' },
   ] as const;
 
   return (

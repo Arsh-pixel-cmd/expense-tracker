@@ -15,9 +15,9 @@ const RATES: Record<Settings['currency'], number> = {
 export const getCurrencySymbol = (currency: Settings['currency'] | string = "USD") => {
     const symbols: Record<string, string> = {
         USD: "$",
-        EUR: "\u20AC",
-        GBP: "\u00A3",
-        INR: "\u20B9",
+        EUR: "€",
+        GBP: "£",
+        INR: "₹",
     };
     return symbols[currency] || "$";
 };
