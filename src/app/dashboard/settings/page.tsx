@@ -49,6 +49,8 @@ const getErrorMessage = (error: unknown): string => {
   return 'Something went wrong';
 };
 
+import Image from 'next/image';
+
 const CurrencySelector = ({
   value,
   onChange,
@@ -59,10 +61,10 @@ const CurrencySelector = ({
   pendingValue?: AppSettings['currency'];
 }) => {
   const options = [
-    { value: 'USD', symbol: getCurrencySymbol('USD') },
-    { value: 'EUR', symbol: getCurrencySymbol('EUR') },
-    { value: 'GBP', symbol: getCurrencySymbol('GBP') },
-    { value: 'INR', symbol: getCurrencySymbol('INR') },
+    { value: 'USD', symbol: getCurrencySymbol('USD'), image: undefined },
+    { value: 'EUR', symbol: getCurrencySymbol('EUR'), image: undefined },
+    { value: 'GBP', symbol: getCurrencySymbol('GBP'), image: undefined },
+    { value: 'INR', symbol: getCurrencySymbol('INR'), image: '/images/rupee-3d.png' },
   ] as const;
 
   return (
@@ -70,23 +72,34 @@ const CurrencySelector = ({
       {options.map((option) => {
         const isSelected = value === option.value;
         const isPending = pendingValue === option.value;
-        const isFading = pendingValue && isSelected; // Current value fades if there is a pending change
+        const isFading = pendingValue && isSelected;
 
         return (
           <Button
             key={option.value}
             variant="ghost"
-            onClick={() => onChange(option.value)}
+            onClick={() => onChange(option.value as AppSettings['currency'])}
             className={cn(
-              'h-auto flex-col p-3 transition-all duration-300 relative overflow-visible', // Added relative and overflow-visible
-              isSelected && !pendingValue && 'bg-primary/10 text-primary border border-primary', // Normal active state
-              isPending && 'bg-primary text-primary-foreground scale-105 shadow-xl ring-2 ring-primary ring-offset-2 z-10', // Stronger active state with ring and lift
-              isFading && 'bg-primary/5 text-primary/50 opacity-40 scale-95 blur-[0.5px]', // Fading out more noticeably
-              !isSelected && !isPending && 'bg-background hover:bg-accent' // Default inactive
+              'h-20 flex-col p-2 transition-all duration-300 relative overflow-visible',
+              isSelected && !pendingValue && 'bg-primary/10 text-primary border border-primary',
+              isPending && 'bg-primary text-primary-foreground scale-105 shadow-xl ring-2 ring-primary ring-offset-2 z-10',
+              isFading && 'bg-primary/5 text-primary/50 opacity-40 scale-95 blur-[0.5px]',
+              !isSelected && !isPending && 'bg-background hover:bg-accent'
             )}
           >
-            <span className="text-2xl font-bold">{option.symbol}</span>
-            <span className="text-xs">{option.value}</span>
+            {option.image ? (
+              <div className="relative w-10 h-10 mb-1 drop-shadow-md">
+                <Image
+                  src={option.image}
+                  alt={option.value}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <span className="text-2xl font-bold mb-1">{option.symbol}</span>
+            )}
+            <span className="text-xs font-medium">{option.value}</span>
             {isPending && (
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white border-2 border-primary animate-pulse shadow-sm z-20" />
             )}
