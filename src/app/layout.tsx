@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { PT_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -15,7 +15,20 @@ const ptSans = PT_Sans({
 
 export const metadata: Metadata = {
   title: "TrackWise",
-  description: "Track your expenses effortlessly",
+  description: "Track your expenses effortlessly with AI power.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "TrackWise",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
