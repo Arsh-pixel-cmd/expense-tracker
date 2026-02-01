@@ -1,6 +1,5 @@
-
-import Login from "./login/page";
+import LandingPage from "@/components/LandingPage";
 
 export default function HomePage() {
-  return <Login />;
+  return <LandingPage />;
 }

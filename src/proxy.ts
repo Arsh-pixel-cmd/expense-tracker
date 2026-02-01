@@ -1,39 +1,64 @@
-
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse, userAgent } from 'next/server'
 import { createClient } from '@/lib/supabase/middleware'
 
 export async function proxy(request: NextRequest) {
-  const { supabase, response } = createClient(request)
+    const { supabase, response } = createClient(request)
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
 
-  const { pathname } = request.nextUrl
+    const url = request.nextUrl.clone()
+    const { device } = userAgent(request)
+    const isMobile = device.type === 'mobile' || device.type === 'tablet'
 
-  // Redirect to dashboard if user is logged in and tries to access auth pages
-  if (session && (pathname === '/login' || pathname === '/signup' || pathname === '/')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+    // Device-specific routing for root path '/'
+    if (url.pathname === '/') {
+        // If mobile user visits root, redirect to login
+        // BUT if they are already logged in, they might expect dashboard?
+        // User requirement: "in web the home page gets open... in mobile/tablet show the login / sign up page"
+        if (isMobile) {
+            // If logged in, go to dashboard, else login
+            if (user) {
+                url.pathname = '/dashboard'
+                return NextResponse.redirect(url)
+            } else {
+                url.pathname = '/login'
+                return NextResponse.redirect(url)
+            }
+        }
+        // Desktop users stay on '/' (Landing Page)
+    }
 
-  // Redirect to login if user is not logged in and tries to access protected routes
-  if (!session && pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+    // Auth protection for /dashboard routes
+    if (url.pathname.startsWith('/dashboard')) {
+        if (!user) {
+            url.pathname = '/login'
+            return NextResponse.redirect(url)
+        }
+    }
 
-  return response
+    // Auth pages (login/signup) - Redirect to dashboard if already logged in
+    if (url.pathname === '/login' || url.pathname === '/signup') {
+        if (user) {
+            url.pathname = '/dashboard'
+            return NextResponse.redirect(url)
+        }
+    }
+
+    return response
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - auth/callback (Supabase auth callback)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+    matcher: [
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - auth/callback (auth callback route)
+         * Feel free to modify this pattern to include more paths.
+         */
+        '/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    ],
 }

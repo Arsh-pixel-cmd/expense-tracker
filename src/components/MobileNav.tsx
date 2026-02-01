@@ -21,7 +21,8 @@ export const MobileNav = () => {
   const pathname = usePathname();
 
   // Hide on auth pages
-  if (["/login", "/signup"].includes(pathname)) {
+  // Only show on dashboard routes
+  if (!pathname.startsWith('/dashboard')) {
     return null;
   }
 
