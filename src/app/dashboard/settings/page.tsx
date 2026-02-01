@@ -154,8 +154,8 @@ const Settings = () => {
   // ... (existing methods: handleCurrencyChange, confirmCurrencyChange, handleExportCSV, handleExportPDF, handleThemeChange)
 
   const handleCurrencyChange = async (newCurrency: AppSettings['currency']) => {
-    const oldCurrency = settings?.currency;
-    if (!oldCurrency || oldCurrency === newCurrency) return;
+    const oldCurrency = settings?.currency || 'USD';
+    if (oldCurrency === newCurrency) return;
     setConversionDialog({ open: true, from: oldCurrency, to: newCurrency });
   };
 
