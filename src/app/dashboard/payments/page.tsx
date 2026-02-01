@@ -35,10 +35,12 @@ import { AppLauncher } from '@capacitor/app-launcher';
 import { Capacitor } from '@capacitor/core';
 
 
+
 const upiOptions = [
   { name: 'Google Pay', icon: Smartphone, scheme: 'tez://' },
   { name: 'PhonePe', icon: Wallet, scheme: 'phonepe://' },
-  { name: 'Paytm', icon: CreditCard, scheme: 'paytmmp://' },
+  { name: 'Paytm', icon: CreditCard, scheme: 'paytm://' },
+  { name: 'Any UPI App', icon: Wallet, scheme: 'upi://pay' },
 ];
 
 const Payments = () => {
@@ -81,12 +83,14 @@ const Payments = () => {
   const handleOpenUPI = async (scheme: string) => {
     // If on web (mobile browser), directly try to open the scheme
     if (Capacitor.getPlatform() === 'web') {
-      window.location.href = scheme;
+      // swift fallback for web might work better with window.open
+      window.open(scheme, '_self');
       return;
     }
 
     try {
       // Try to open with AppLauncher (native app)
+      // ... (native logic)
       const { value } = await AppLauncher.canOpenUrl({ url: scheme });
 
       if (value) {
