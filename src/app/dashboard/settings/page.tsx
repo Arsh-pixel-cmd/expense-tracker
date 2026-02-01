@@ -40,7 +40,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 const getErrorMessage = (error: unknown): string => {
@@ -103,12 +103,45 @@ const Settings = () => {
   const user = session?.user;
   const { setTheme } = useTheme();
 
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setInstallPrompt(null);
+      }
+    } else {
+      // iOS / other fallback
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        toast.info('Install on iOS: Tap Share -> Add to Home Screen');
+      } else {
+        toast.info('Already installed or not supported in this browser');
+      }
+    }
+  };
+
+  // ... (existing states)
+
   const [isConverting, setIsConverting] = useState(false);
   const [conversionDialog, setConversionDialog] = useState<{
     open: boolean;
     from?: AppSettings['currency'];
     to?: AppSettings['currency'];
   }>({ open: false });
+
+  // ... (existing hooks)
 
   const { data: settings } = useDoc<AppSettings>(
     user ? `settings?select=*&user_id=eq.${user.id}` : null,
@@ -118,69 +151,48 @@ const Settings = () => {
     user ? `transactions?select=*&user_id=eq.${user.id}` : null,
   );
 
+  // ... (existing methods: handleCurrencyChange, confirmCurrencyChange, handleExportCSV, handleExportPDF, handleThemeChange)
+
   const handleCurrencyChange = async (newCurrency: AppSettings['currency']) => {
     const oldCurrency = settings?.currency;
     if (!oldCurrency || oldCurrency === newCurrency) return;
-
     setConversionDialog({ open: true, from: oldCurrency, to: newCurrency });
   };
 
   const confirmCurrencyChange = async () => {
-    if (!conversionDialog.from || !conversionDialog.to || !user || !supabase)
-      return;
-
+    if (!conversionDialog.from || !conversionDialog.to || !user || !supabase) return;
     setIsConverting(true);
-    // Removed toast.loading to reduce notifications
-
     try {
-      // 1. Calculate conversion rate
       const rate = convertAmount(1, conversionDialog.from!, conversionDialog.to!);
-
-      // 2. Call RPC to update all transactions and settings in one go
       const { error: rpcError } = await supabase.rpc('convert_currency', {
         p_user_id: user.id,
         p_rate: rate,
         p_new_currency: conversionDialog.to
       });
-
       if (rpcError) throw rpcError;
-
-      // 3. Convert budgets (Single row update, so fine to do here)
       const { data: budgetData, error: bError } = await supabase
         .from('budgets')
         .select('budgets')
         .eq('user_id', user.id)
         .maybeSingle();
-
       if (bError && bError.code !== 'PGRST116') throw bError;
-
       if (budgetData?.budgets) {
         const convertedBudgets: { [key: string]: number } = {};
         for (const categoryId in budgetData.budgets) {
           const amount = budgetData.budgets[categoryId];
-          convertedBudgets[categoryId] = convertAmount(
-            amount,
-            conversionDialog.from!,
-            conversionDialog.to!,
-          );
+          convertedBudgets[categoryId] = convertAmount(amount, conversionDialog.from!, conversionDialog.to!);
         }
         const { error: budgetUpdateError } = await supabase
           .from('budgets')
           .update({ budgets: convertedBudgets })
           .eq('user_id', user.id);
-
         if (budgetUpdateError) throw budgetUpdateError;
       }
-
       toast.success(`Currency successfully changed to ${conversionDialog.to}`);
-
-      // Refresh local data
       updateSettings({ currency: conversionDialog.to });
     } catch (error: unknown) {
       toast.dismiss();
-      toast.error('Conversion failed', {
-        description: getErrorMessage(error),
-      });
+      toast.error('Conversion failed', { description: getErrorMessage(error) });
     } finally {
       setIsConverting(false);
       setConversionDialog({ open: false });
@@ -192,40 +204,17 @@ const Settings = () => {
       toast.error('No transactions to export.');
       return;
     }
-
     const csv = [
-      [
-        'Date',
-        'Merchant',
-        'Amount',
-        'Type',
-        'Category',
-        'Status',
-        'Note',
-      ].join(','),
-      ...transactions.map((t) =>
-        [
-          t.date,
-          `"${t.merchant.replace(/"/g, '""')}"`,
-          t.amount,
-          t.type,
-          t.category,
-          t.status,
-          `"${(t.note || '').replace(/"/g, '""')}"`,
-        ].join(','),
-      ),
+      ['Date', 'Merchant', 'Amount', 'Type', 'Category', 'Status', 'Note'].join(','),
+      ...transactions.map((t) => [t.date, `"${t.merchant.replace(/"/g, '""')}"`, t.amount, t.type, t.category, t.status, `"${(t.note || '').replace(/"/g, '""')}"`].join(','))
     ].join('\n');
-
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement('a');
     a.href = url;
-    a.download = `smartspend-expenses-${new Date().toISOString().split('T')[0]
-      }.csv`;
+    a.download = `smartspend-expenses-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-
     toast.success('CSV exported successfully');
   };
 
@@ -234,27 +223,17 @@ const Settings = () => {
       toast.error('No transactions to export.');
       return;
     }
-
     const doc = new jsPDF();
     autoTable(doc, {
       head: [['Date', 'Merchant', 'Category', 'Type', 'Amount']],
-      body: transactions.map(t => [
-        t.date,
-        t.merchant,
-        t.category,
-        t.type,
-        `${getCurrencySymbol(settings?.currency)} ${t.amount.toFixed(2)}`
-      ]),
+      body: transactions.map(t => [t.date, t.merchant, t.category, t.type, `${getCurrencySymbol(settings?.currency)} ${t.amount.toFixed(2)}`]),
       startY: 30,
       didDrawPage: (data) => {
         doc.setFontSize(20);
         doc.text('Transaction Report', data.settings.margin.left, 20);
       }
     });
-
-    doc.save(
-      `smartspend-expenses-${new Date().toISOString().split('T')[0]}.pdf`,
-    );
+    doc.save(`smartspend-expenses-${new Date().toISOString().split('T')[0]}.pdf`);
     toast.success('PDF exported successfully');
   };
 
@@ -263,6 +242,7 @@ const Settings = () => {
     setTheme(newTheme);
     updateSettings({ dark_mode: isDark });
   };
+
 
   const currentSettings: AppSettings = settings || {
     user_id: user?.id || '',
@@ -345,6 +325,11 @@ const Settings = () => {
           isCurrency: true,
           value: currentSettings.currency,
           onChange: handleCurrencyChange,
+        },
+        {
+          icon: Download,
+          label: 'Install App',
+          onClick: handleInstallClick,
         },
       ],
     },
