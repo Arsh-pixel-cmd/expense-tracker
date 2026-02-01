@@ -36,7 +36,7 @@ import { Capacitor } from '@capacitor/core';
 
 
 const upiOptions = [
-  { name: 'Google Pay', icon: Smartphone, scheme: 'gpay://' },
+  { name: 'Google Pay', icon: Smartphone, scheme: 'tez://' },
   { name: 'PhonePe', icon: Wallet, scheme: 'phonepe://' },
   { name: 'Paytm', icon: CreditCard, scheme: 'paytmmp://' },
 ];
