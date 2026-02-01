@@ -6,7 +6,7 @@ import {
   useDoc,
 } from '@/hooks/use-supabase';
 import { useSupabase } from '@/lib/supabase/provider';
-import { getCurrencySymbol } from '@/lib/currency';
+import { getCurrencySymbol, CurrencyIcon, convertAmount } from '@/lib/currency';
 import type { Group, GroupExpense, Settings } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { ChevronLeft, Copy, Plus, Trash2 } from 'lucide-react';
@@ -203,22 +203,28 @@ const GroupDetail = () => {
                           {settled
                             ? 'Settled'
                             : balance > 0
-                              ? `Gets back ${currencySymbol}${balance.toFixed(2)}`
-                              : `Has to pay ${currencySymbol}${Math.abs(
-                                balance
-                              ).toFixed(2)}`}
+                              ? `Gets back ${currencySymbol}${convertAmount(balance, 'USD', settings?.currency || 'USD').toFixed(2)}`
+                              : `Has to pay ${currencySymbol}${convertAmount(Math.abs(balance), 'USD', settings?.currency || 'USD').toFixed(2)}`}
                         </p>
                       </div>
                     </div>
 
                     <div
-                      className={`font-bold ${balance > 0 ? 'text-success' : 'text-destructive'
+                      className={`font-bold flex items-center ${balance > 0 ? 'text-success' : 'text-destructive'
                         }`}
                     >
-                      {settled
-                        ? `${currencySymbol}0.00`
-                        : `${balance > 0 ? '+' : '-'
-                        }${currencySymbol}${Math.abs(balance).toFixed(2)}`}
+                      {settled ? (
+                        <>
+                          <CurrencyIcon currency={settings?.currency} className="h-4 w-4 mr-1" />
+                          0.00
+                        </>
+                      ) : (
+                        <>
+                          {balance > 0 ? '+' : '-'}
+                          <CurrencyIcon currency={settings?.currency} className="h-4 w-4 mx-1" />
+                          {convertAmount(Math.abs(balance), 'USD', settings?.currency || 'USD').toFixed(2)}
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -253,9 +259,9 @@ const GroupDetail = () => {
                           Paid by {(payer as any)?.displayName} • {date}
                         </p>
                       </div>
-                      <div className="font-semibold">
-                        {currencySymbol}
-                        {exp.amount.toFixed(2)}
+                      <div className="font-semibold flex items-center">
+                        <CurrencyIcon currency={settings?.currency} className="h-4 w-4 mr-1" />
+                        {convertAmount(exp.amount, 'USD', settings?.currency || 'USD').toFixed(2)}
                       </div>
                     </div>
                   );
@@ -318,7 +324,7 @@ const GroupDetail = () => {
             </Card>
           )}
         </div>
-      </div>
+      </div >
     </>
   );
 };

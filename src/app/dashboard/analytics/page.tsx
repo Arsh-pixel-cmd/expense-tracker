@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { useCollection, useDoc } from '@/hooks/use-supabase';
 import { useSupabase } from '@/lib/supabase/provider';
-import { getCurrencySymbol } from '@/lib/currency';
+import { getCurrencySymbol, CurrencyIcon } from '@/lib/currency';
 import type { Settings, Transaction } from '@/lib/types';
 import {
   format,
@@ -228,8 +228,8 @@ const Analytics = () => {
               </p>
               <NetBalanceIcon className={`h-4 w-4 ${netBalanceColor}`} />
             </div>
-            <p className={`text-2xl font-bold ${netBalanceColor}`}>
-              {currencySymbol}
+            <p className={`text-2xl font-bold flex items-center ${netBalanceColor}`}>
+              <CurrencyIcon currency={settings?.currency} className="h-6 w-6 mr-1" />
               {insights.netBalance.toFixed(2)}
             </p>
           </CardContent>
@@ -251,8 +251,8 @@ const Analytics = () => {
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-lg font-bold">{insights.topCategory}</p>
-                <p className="text-sm font-semibold text-primary">
-                  {currencySymbol}
+                <p className="text-sm font-semibold text-primary flex items-center">
+                  <CurrencyIcon currency={settings?.currency} className="h-3 w-3 mr-1" />
                   {insights.topCategoryAmount.toFixed(2)}
                 </p>
               </CardContent>
@@ -263,8 +263,8 @@ const Analytics = () => {
                   <p className="text-xs text-muted-foreground">Avg. Daily Spend</p>
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <p className="text-lg font-bold">
-                  {currencySymbol}
+                <p className="text-lg font-bold flex items-center">
+                  <CurrencyIcon currency={settings?.currency} className="h-5 w-5 mr-1" />
                   {insights.avgDailySpend.toFixed(2)}
                 </p>
                 <p className="text-sm text-muted-foreground">this month</p>

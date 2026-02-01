@@ -23,7 +23,7 @@ import {
   YAxis,
 } from "recharts";
 import { useSupabase } from "@/lib/supabase/provider";
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, CurrencyIcon } from "@/lib/currency";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -213,8 +213,8 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline justify-between mb-3">
-            <span className="text-4xl font-bold">
-              {currencySymbol}
+            <span className="text-4xl font-bold flex items-center">
+              <CurrencyIcon currency={settings?.currency} className="h-8 w-8 mr-1" />
               {todaySpend.toFixed(2)}
             </span>
             {hasBudgets && (
@@ -287,8 +287,8 @@ const Dashboard = () => {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">This Month</p>
-            <p className="text-2xl font-bold">
-              {currencySymbol}
+            <p className="text-2xl font-bold flex items-center">
+              <CurrencyIcon currency={settings?.currency} className="h-6 w-6 mr-1" />
               {monthTotal.toFixed(2)}
             </p>
             <div className="flex items-center gap-1 mt-2 text-destructive">
@@ -301,8 +301,8 @@ const Dashboard = () => {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">Saved</p>
-            <p className="text-2xl font-bold">
-              {currencySymbol}
+            <p className="text-2xl font-bold flex items-center">
+              <CurrencyIcon currency={settings?.currency} className="h-6 w-6 mr-1" />
               {Math.max(0, savedAmount).toFixed(2)}
             </p>
             <div className="flex items-center gap-1 mt-2 text-success">
@@ -340,9 +340,10 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`font-bold ${tx.type === 'debit' ? 'text-destructive' : 'text-success'}`}>
+                    <span className={`font-bold flex items-center ${tx.type === 'debit' ? 'text-destructive' : 'text-success'}`}>
                       {tx.type === 'debit' ? '-' : '+'}
-                      {currencySymbol}{tx.amount.toFixed(2)}
+                      <CurrencyIcon currency={settings?.currency} className="h-3 w-3 mx-0.5" />
+                      {tx.amount.toFixed(2)}
                     </span>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>

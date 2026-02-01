@@ -25,7 +25,7 @@ import { AddCategoryDialog } from '@/components/AddCategoryDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { useCollection, useDoc } from '@/hooks/use-supabase';
 import { useSupabase } from '@/lib/supabase/provider';
-import { getCurrencySymbol } from '@/lib/currency';
+import { getCurrencySymbol, CurrencyIcon } from '@/lib/currency';
 import type { Category, Settings, Transaction } from '@/lib/types';
 import {
   FolderTree,
@@ -227,13 +227,13 @@ const Categories = () => {
                                         <TrendingDown className="h-4 w-4 text-destructive" />
                                       )}
                                       <span
-                                        className={`font-bold ${tx.type === 'credit'
+                                        className={`font-bold flex items-center ${tx.type === 'credit'
                                           ? 'text-success'
                                           : ''
                                           }`}
                                       >
                                         {tx.type === 'credit' ? '+' : ''}
-                                        {currencySymbol}
+                                        <CurrencyIcon currency={settings?.currency} className="h-3 w-3 mx-0.5" />
                                         {tx.amount.toFixed(2)}
                                       </span>
                                     </div>
