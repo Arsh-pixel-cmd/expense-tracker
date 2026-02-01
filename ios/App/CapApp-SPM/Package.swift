@@ -11,14 +11,18 @@ let package = Package(
             targets: ["CapApp-SPM"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.0.2")
+        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.0.2"),
+        .package(name: "CapacitorAppLauncher", path: "../../../node_modules/@capacitor/app-launcher"),
+        .package(name: "CapacitorLocalNotifications", path: "../../../node_modules/@capacitor/local-notifications")
     ],
     targets: [
         .target(
             name: "CapApp-SPM",
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
-                .product(name: "Cordova", package: "capacitor-swift-pm")
+                .product(name: "Cordova", package: "capacitor-swift-pm"),
+                .product(name: "CapacitorAppLauncher", package: "CapacitorAppLauncher"),
+                .product(name: "CapacitorLocalNotifications", package: "CapacitorLocalNotifications")
             ]
         )
     ]

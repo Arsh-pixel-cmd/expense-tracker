@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
+import { AppLauncher } from '@capacitor/app-launcher';
 
 
 const upiOptions = [
@@ -74,8 +75,26 @@ const Payments = () => {
     toast.success('Transaction deleted');
   };
 
-  const handleOpenUPI = (scheme: string) => {
-    window.location.href = scheme;
+  // ... imports
+
+  const handleOpenUPI = async (scheme: string) => {
+    try {
+      // Try to open with AppLauncher (native)
+      const { value } = await AppLauncher.canOpenUrl({ url: scheme });
+
+      if (value) {
+        await AppLauncher.openUrl({ url: scheme });
+      } else {
+        // Fallback or error if app not installed
+        toast.error('App not installed');
+        // Optionally try web fallback if applicable, but for schemes it's usually native
+        window.location.href = scheme;
+      }
+    } catch (e) {
+      console.error("Error opening app", e);
+      // Fallback for web
+      window.location.href = scheme;
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useSupabase } from "@/lib/supabase/provider";
 import { useCollection, useDoc } from "@/hooks/use-supabase";
+import { LocalNotifications } from '@capacitor/local-notifications';
 import type {
   Transaction,
   Category,
@@ -86,10 +87,16 @@ export const BudgetNotifier = () => {
   }, [budgetSettings, categories, expenses]);
 
   useEffect(() => {
-    // Check standard notification permissions
-    if (settings?.notifications && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    const checkPermissions = async () => {
+      // Check standard notification permissions
+      if (settings?.notifications) {
+        const status = await LocalNotifications.checkPermissions();
+        if (status.display === 'prompt') {
+          await LocalNotifications.requestPermissions();
+        }
+      }
+    };
+    checkPermissions();
 
     const next = activeBudgets.find((b) => {
       const spent = b.spent ?? 0;
@@ -104,12 +111,23 @@ export const BudgetNotifier = () => {
       setTriggeredBudget(next);
 
       // Send system notification if enabled
-      if (settings?.notifications && 'Notification' in window && Notification.permission === 'granted') {
+      if (settings?.notifications) {
         const spentAmount = next.spent || 0;
-        new Notification('Budget Alert 🚨', {
-          body: `You've used ${(spentAmount / (next.amount || 1) * 100).toFixed(0)}% of your ${next.categoryName} budget.`,
-          icon: '/icon-192x192.png'
-        });
+        const percent = ((spentAmount / (next.amount || 1)) * 100).toFixed(0);
+
+        LocalNotifications.schedule({
+          notifications: [
+            {
+              title: 'Budget Alert 🚨',
+              body: `You've used ${percent}% of your ${next.categoryName} budget.`,
+              id: Math.floor(Math.random() * 100000), // Random ID to allow multiple
+              schedule: { at: new Date(Date.now() + 1000) }, // 1 second delay
+              smallIcon: 'ic_stat_notification', // fallback icon name
+              actionTypeId: "",
+              extra: null
+            }
+          ]
+        }).catch(err => console.error("Error scheduling notification", err));
       }
     } else {
       setTriggeredBudget(null);
