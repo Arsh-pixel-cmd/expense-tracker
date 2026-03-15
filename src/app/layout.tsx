@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { PT_Sans } from "next/font/google";
+import { Inter } from "next/font/google"; // 1. Switched to Inter
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SupabaseProvider } from "@/lib/supabase/provider";
@@ -8,9 +8,9 @@ import { MobileNav } from "@/components/MobileNav";
 import { AppProvider } from "@/contexts/AppContext";
 import { VoiceExpenseWidget } from "@/components/VoiceExpenseWidget";
 
-const ptSans = PT_Sans({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "700"],
+// 2. Configure Inter
+const inter = Inter({
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -37,8 +37,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${ptSans.className} bg-very-light-blue`}>
+    //added no translate so google dont force translate the rupee symbol
+    <html lang="en" translate="no" suppressHydrationWarning>
+      <meta name="google" content="notranslate" />
+      {/* 3. Apply Inter directly */}
+      <body className={`${inter.className} bg-very-light-blue`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
