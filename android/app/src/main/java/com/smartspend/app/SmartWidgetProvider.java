@@ -35,8 +35,10 @@ public class SmartWidgetProvider extends AppWidgetProvider {
 
         // Style overrides based on React context
         if ("danger".equals(colorState)) {
-            views.setTextColor(R.id.widget_title, Color.parseColor("#FF6B6B")); // Match React Destructive Red
+            // A brighter red that pops on the dark navy background
+            views.setTextColor(R.id.widget_title, Color.parseColor("#FF4B4B")); 
         } else {
+            // Bright white for safe/standard state
             views.setTextColor(R.id.widget_title, Color.WHITE);
         }
 

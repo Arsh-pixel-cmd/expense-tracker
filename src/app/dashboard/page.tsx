@@ -171,7 +171,9 @@ const Dashboard = () => {
       const daysInCurrentMonth = getDaysInMonth(today);
       const totalWeeklyBudget = (totalMonthlyBudget / daysInCurrentMonth) * 7;
       if (totalWeeklyBudget > 0) {
-        budgetDifference = Math.round(((totalWeeklySpend - totalWeeklyBudget) / totalWeeklyBudget) * 100);
+        // Remaining % clamped to [-100, 100]: positive = under budget, negative = over budget
+        const rawRemaining = Math.round(((totalWeeklyBudget - totalWeeklySpend) / totalWeeklyBudget) * 100);
+        budgetDifference = Math.max(-100, Math.min(100, rawRemaining));
         isOverBudget = totalWeeklySpend > totalWeeklyBudget;
       }
     }
@@ -248,7 +250,7 @@ const Dashboard = () => {
         if (hasBudgets) {
           await WidgetBridgePlugin.setItem({
             key: "widget_title",
-            value: `Budget: ${widgetCurrencyString}${budgetDifference > 0 ? '+' : ''}${budgetDifference}%`,
+            value: `Budget: ${budgetDifference > 0 ? '+' : ''}${budgetDifference}%`,
             group: "group.expensebuilder.widget"
           });
           await WidgetBridgePlugin.setItem({
@@ -343,7 +345,7 @@ const Dashboard = () => {
               <div className={`flex items-center shrink-0 gap-1 ${isOverBudget ? 'text-destructive' : 'text-success'}`}>
                 {isOverBudget ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 <span className="text-sm font-semibold">
-                  {Math.abs(budgetDifference)}%
+                  {budgetDifference > 0 ? '+' : ''}{budgetDifference}%
                 </span>
               </div>
             )}
@@ -352,7 +354,9 @@ const Dashboard = () => {
             <div className={`flex items-center gap-2 px-3 py-2 ${isOverBudget ? 'bg-destructive/10' : 'bg-success/10'} rounded-lg`}>
               {isOverBudget ? <TrendingUp className="h-4 w-4 text-destructive" /> : <TrendingDown className="h-4 w-4 text-success" />}
               <p className={`text-sm ${isOverBudget ? 'text-destructive' : 'text-success'}`}>
-                You're {Math.abs(budgetDifference)}% {isOverBudget ? 'over' : 'under'} budget this week
+                {isOverBudget
+                  ? `You're ${Math.abs(budgetDifference)}% over budget this week`
+                  : `You're ${budgetDifference}% under budget this week`}
               </p>
             </div>
           ) : (

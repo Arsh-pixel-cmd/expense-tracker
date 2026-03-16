@@ -172,21 +172,26 @@ export const BudgetNotifier = () => {
     if (next) {
       setTriggeredBudget(next);
 
-      // Send system notification ONLY if spending increased since last notification
-      if (settings?.notifications === true) {
+      // Send system notification ONLY when spending EXCEEDS 100% of budget
+      const spentAmount = next.spent ?? 0;
+      const isOverBudgetNow = next.amount > 0 && spentAmount > next.amount;
+
+      if (settings?.notifications === true && isOverBudgetNow) {
         const notifiedAmounts = loadNotified();
         const lastNotifiedSpent = notifiedAmounts[next.categoryName] ?? 0;
 
-        if ((next.spent ?? 0) > lastNotifiedSpent) {
-          const spentAmount = next.spent || 0;
-          const rawPercent = (spentAmount / (next.amount || 1)) * 100;
-          const percentRaw = Math.min(100, Math.round(rawPercent));
+        if (spentAmount > lastNotifiedSpent) {
+          // Remaining % clamped to [-100, 100]
+          const remainingPct = Math.max(-100, Math.min(100,
+            Math.round(((next.amount - spentAmount) / (next.amount || 1)) * 100)
+          ));
+          const overAmount = Math.round(spentAmount - next.amount);
 
           LocalNotifications.schedule({
             notifications: [
               {
-                title: 'Budget Alert 🚨',
-                body: `You've used ${percentRaw}% of your ${next.categoryName} budget.`,
+                title: `🔥 Over Budget — ${next.categoryName}`,
+                body: `${currencySymbol}${spentAmount.toFixed(0)} spent of ${currencySymbol}${next.amount.toFixed(0)} budget (${remainingPct}%) · -${currencySymbol}${overAmount} over`,
                 id: Math.floor(Math.random() * 100000),
                 schedule: { at: new Date(Date.now() + 1000) },
                 smallIcon: 'ic_stat_notification',
@@ -197,7 +202,7 @@ export const BudgetNotifier = () => {
           }).catch(err => console.error("Error scheduling notification", err));
 
           // Mark this spending level as notified
-          notifiedAmounts[next.categoryName] = next.spent ?? 0;
+          notifiedAmounts[next.categoryName] = spentAmount;
           saveNotified(notifiedAmounts);
         }
       }
