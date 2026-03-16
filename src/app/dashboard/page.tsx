@@ -112,7 +112,8 @@ const Dashboard = () => {
     savedAmount,
     todaysTransactions,
     budgetDifference,
-    isOverBudget
+    isOverBudget,
+    roundUpTotal
   } = useMemo(() => {
     const tx = transactions || [];
     const today = new Date();
@@ -221,6 +222,17 @@ const Dashboard = () => {
 
     const savedAmount = income - monthTotal;
 
+    const roundUpTotal = tx
+      .filter(t => t.type === 'debit')
+      .reduce((sum, t) => {
+        const isINR = settings?.currency === 'INR';
+        const roundTo = isINR ? 10 : 1;
+        const remainder = t.amount % roundTo;
+        if (remainder === 0) return sum;
+        const roundedAmount = t.amount + (roundTo - remainder);
+        return sum + (roundedAmount - t.amount);
+      }, 0);
+
     return {
       todaySpend,
       weeklyData,
@@ -229,8 +241,9 @@ const Dashboard = () => {
       todaysTransactions,
       budgetDifference,
       isOverBudget,
+      roundUpTotal
     };
-  }, [transactions, budgetSettings]);
+  }, [transactions, budgetSettings, settings?.currency]);
 
   const handleResetToday = () => {
     if (todaysTransactions.length === 0) {
@@ -292,7 +305,17 @@ const Dashboard = () => {
     <>
       <header className="flex items-start justify-between gap-2 mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">SmartSpend</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary drop-shadow-sm">
+              {/* Outer Coin Ring */}
+              <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="12" />
+              {/* The Notch (masking the top) */}
+              <circle cx="50" cy="10" r="14" fill="hsl(var(--background))" />
+              {/* The 'P' stem / Coin slot */}
+              <path d="M44 26 L44 74" stroke="currentColor" strokeWidth="12" strokeLinecap="round" />
+            </svg>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Pennywise</h1>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">Track your expenses effortlessly</p>
         </div>
         <AddTransactionDialog
@@ -442,6 +465,32 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-6 mb-6 overflow-hidden relative border-none bg-accent/20">
+        <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none mix-blend-overlay">
+           <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
+              <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="12" />
+              <circle cx="50" cy="10" r="14" fill="hsl(var(--background))" />
+              <path d="M44 26 L44 74" stroke="currentColor" strokeWidth="12" strokeLinecap="round" />
+            </svg>
+        </div>
+        <CardContent className="pt-6 relative z-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-semibold text-accent-foreground/80 flex items-center gap-1.5 mb-1">
+                Round-Up Goals ✨
+              </p>
+              <div className="text-3xl font-bold flex items-center text-foreground">
+                <CurrencyIcon currency={settings?.currency} className="h-6 w-6 mr-1" />
+                <span>{roundUpTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 max-w-[80%]">
+                Amount you could have saved by rounding every expense up to the nearest {settings?.currency === 'INR' ? '₹10' : 'whole number'}.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <BudgetNotifier />
 

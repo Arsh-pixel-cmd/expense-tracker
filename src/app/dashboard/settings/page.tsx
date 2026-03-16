@@ -576,7 +576,7 @@ const Settings = () => {
 
 
       <p className="text-center text-xs text-muted-foreground mt-8">
-        SmartSpend v1.0.0
+        Pennywise v1.0.0
       </p>
     </>
   );

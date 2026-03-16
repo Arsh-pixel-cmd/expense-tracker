@@ -40,7 +40,7 @@ export default function BiometricAuthGuard({ children }: { children: React.React
     const performBiometricAuth = async () => {
         try {
             await NativeBiometric.verifyIdentity({
-                reason: "Unlock SmartSpend",
+                reason: "Unlock Pennywise",
                 title: "Authentication Required",
                 subtitle: "Confirm your identity to continue",
                 description: "Use your fingerprint or face ID"
@@ -64,7 +64,7 @@ export default function BiometricAuthGuard({ children }: { children: React.React
                     </div>
 
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-bold tracking-tight">SmartSpend Locked</h2>
+                        <h2 className="text-2xl font-bold tracking-tight">Pennywise Locked</h2>
                         <p className="text-muted-foreground">Authentication required to access your finances.</p>
                     </div>
 
