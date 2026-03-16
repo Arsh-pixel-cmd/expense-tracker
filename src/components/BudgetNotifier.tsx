@@ -177,7 +177,7 @@ export const BudgetNotifier = () => {
         const notifiedAmounts = loadNotified();
         const lastNotifiedSpent = notifiedAmounts[next.categoryName] ?? 0;
 
-        if (next.spent > lastNotifiedSpent) {
+        if ((next.spent ?? 0) > lastNotifiedSpent) {
           const spentAmount = next.spent || 0;
           const rawPercent = (spentAmount / (next.amount || 1)) * 100;
           const percentRaw = Math.min(100, Math.round(rawPercent));
@@ -197,7 +197,7 @@ export const BudgetNotifier = () => {
           }).catch(err => console.error("Error scheduling notification", err));
 
           // Mark this spending level as notified
-          notifiedAmounts[next.categoryName] = next.spent;
+          notifiedAmounts[next.categoryName] = next.spent ?? 0;
           saveNotified(notifiedAmounts);
         }
       }
@@ -211,7 +211,7 @@ export const BudgetNotifier = () => {
 
     const newDismissed = {
       ...dismissedAlerts,
-      [triggeredBudget.categoryName]: triggeredBudget.spent || 0,
+      [triggeredBudget.categoryName]: triggeredBudget.spent ?? 0,
     };
     setDismissedAlerts(newDismissed);
     saveDismissed(newDismissed); // Persist to localStorage
